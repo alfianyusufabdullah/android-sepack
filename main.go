@@ -221,8 +221,6 @@ func readFile(appName string, packageName string, oldName string) {
 			}
 			switch mode := dir.Mode(); {
 			case mode.IsDir():
-				// dir
-				//replace(path, appName, packageName, oldName, false)
 				newPath := pathFixing(path, packageName)
 
 				mkErr := os.MkdirAll(newPath, os.ModePerm)
@@ -241,22 +239,24 @@ func readFile(appName string, packageName string, oldName string) {
 					}
 				}
 			case mode.IsRegular():
-				if path != "main.go" {
-					replace(path, appName, packageName, oldName, true)
-					newPath := pathFixing(path, packageName)
+				/*if !mkDir {
+					if path != "main.go" {
+						replace(path, appName, packageName, oldName, true)
+						newPath := pathFixing(path, packageName)
 
-					pathMkdir := strings.Replace(newPath, info.Name(), "", -1)
-					mkErr := os.MkdirAll(pathMkdir, os.ModePerm)
-					if mkErr != nil {
-						log.Fatal(mkErr)
-					}
+						pathMkdir := strings.Replace(newPath, info.Name(), "", -1)
+						mkErr := os.MkdirAll(pathMkdir, os.ModePerm)
+						if mkErr != nil {
+							log.Fatal(mkErr)
+						}
 
-					err := os.Rename(path, newPath)
-					fmt.Println("Configuring file: ", newPath)
-					if err != nil {
-						log.Println("error", err)
+						err := os.Rename(path, newPath)
+						fmt.Println("Configuring file: ", newPath)
+						if err != nil {
+							log.Println("error", err)
+						}
 					}
-				}
+				}*/
 			}
 			return nil
 		})
