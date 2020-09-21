@@ -222,9 +222,27 @@ func readFile(appName string, packageName string, oldName string) {
 			switch mode := dir.Mode(); {
 			case mode.IsDir():
 				// dir
+				//replace(path, appName, packageName, oldName, false)
+				newPath := pathFixing(path, packageName)
+
+				mkErr := os.MkdirAll(newPath, os.ModePerm)
+				if mkErr != nil {
+					log.Fatal(mkErr)
+				}
+
+				if _, err := os.Stat(newPath); os.IsNotExist(err) {
+					// path/to/whatever does not exist
+
+					err := os.Rename(path, newPath)
+					fmt.Println("Configuring file: ", newPath)
+					if err != nil {
+						log.Println("error ", newPath)
+						//log.Println("error", err)
+					}
+				}
 			case mode.IsRegular():
 				if path != "main.go" {
-					replace(path, appName, packageName, oldName)
+					replace(path, appName, packageName, oldName, true)
 					newPath := pathFixing(path, packageName)
 
 					pathMkdir := strings.Replace(newPath, info.Name(), "", -1)
@@ -236,7 +254,7 @@ func readFile(appName string, packageName string, oldName string) {
 					err := os.Rename(path, newPath)
 					fmt.Println("Configuring file: ", newPath)
 					if err != nil {
-						log.Fatal(err)
+						log.Println("error", err)
 					}
 				}
 			}
@@ -254,24 +272,33 @@ func pathFixing(path string, packageName string) string {
 	return newPath
 }
 
-func replace(path string, appName string, packageName string, oldName string) {
-	input, err := ioutil.ReadFile(path)
-	if err != nil {
-		log.Fatal(err)
-	}
+func replace(path string, appName string, packageName string, oldName string, file bool) {
+	if file {
+		input, err := ioutil.ReadFile(path)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	input = bytes.Replace(input, []byte("com.utsman.sepack"), []byte(packageName), -1)
-	input = bytes.Replace(input, []byte(oldName), []byte(appName), -1)
-	err = ioutil.WriteFile(path, input, 0666)
-	if err != nil {
-		log.Fatal(err)
+		input = bytes.Replace(input, []byte("com.utsman.sepack"), []byte(packageName), -1)
+		input = bytes.Replace(input, []byte(oldName), []byte(appName), -1)
+		err = ioutil.WriteFile(path, input, 0666)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+
+		newDir := strings.Replace(path, "com.utsman.sepack", packageName, -1)
+		err := os.MkdirAll(newDir, os.ModePerm)
+		if err != nil {
+			log.Println("kkkk")
+		}
 	}
 }
 
 func allowedChar(s string, dot bool) bool {
-	allowed := "abcdefghijklmnopqrstuvwxyz "
+	allowed := "abcdefghijklmnopqrstuvwxyz \n"
 	if dot {
-		allowed = "abcdefghijklmnopqrstuvwxyz."
+		allowed = "abcdefghijklmnopqrstuvwxyz.\n"
 	}
 
 	for _, char := range s {
