@@ -221,42 +221,24 @@ func readFile(appName string, packageName string, oldName string) {
 			}
 			switch mode := dir.Mode(); {
 			case mode.IsDir():
-				newPath := pathFixing(path, packageName)
+				// tai
+			case mode.IsRegular():
+				if path != "main.go" {
+					replace(path, appName, packageName, oldName, true)
+					newPath := pathFixing(path, packageName)
 
-				mkErr := os.MkdirAll(newPath, os.ModePerm)
-				if mkErr != nil {
-					log.Fatal(mkErr)
-				}
-
-				if _, err := os.Stat(newPath); os.IsNotExist(err) {
-					// path/to/whatever does not exist
+					pathMkdir := strings.Replace(newPath, info.Name(), "", -1)
+					mkErr := os.MkdirAll(pathMkdir, os.ModePerm)
+					if mkErr != nil {
+						log.Fatal(mkErr)
+					}
 
 					err := os.Rename(path, newPath)
 					fmt.Println("Configuring file: ", newPath)
 					if err != nil {
-						log.Println("error ", newPath)
-						//log.Println("error", err)
+						log.Println("error", err)
 					}
 				}
-			case mode.IsRegular():
-				/*if !mkDir {
-					if path != "main.go" {
-						replace(path, appName, packageName, oldName, true)
-						newPath := pathFixing(path, packageName)
-
-						pathMkdir := strings.Replace(newPath, info.Name(), "", -1)
-						mkErr := os.MkdirAll(pathMkdir, os.ModePerm)
-						if mkErr != nil {
-							log.Fatal(mkErr)
-						}
-
-						err := os.Rename(path, newPath)
-						fmt.Println("Configuring file: ", newPath)
-						if err != nil {
-							log.Println("error", err)
-						}
-					}
-				}*/
 			}
 			return nil
 		})
@@ -269,6 +251,11 @@ func readFile(appName string, packageName string, oldName string) {
 func pathFixing(path string, packageName string) string {
 	pathFixer := strings.Replace(packageName, ".", "/", -1)
 	newPath := strings.Replace(path, "com/utsman/sepack", pathFixer, -1)
+	if runtime.GOOS == "windows" {
+		pathFixer := strings.Replace(packageName, ".", "\\", -1)
+		newPath = strings.Replace(path, "com\\utsman\\sepack", pathFixer, -1)
+	}
+	
 	return newPath
 }
 
